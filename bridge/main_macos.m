@@ -197,6 +197,9 @@ static void midi_in_proc(const MIDIPacketList *pl, void *refCon, void *srcRef) {
             Byte hi = st & 0xF0;
             UInt16 size = (hi == 0xC0 || hi == 0xD0) ? 2 : 3;
             if (j + size > len) break;
+            /* Live's feedback for the crossfader (CC 72) must not reach the Nocturn: 0x48 is the ring-mode
+             * register of encoder 1 (NC_LED_MODE_FIRST) and it would garble that encoder's LED ring. */
+            if (hi == 0xB0 && port == 0 && (pk->data[j + 1] & 0x7F) == NC_CROSSFADER) { j += size; continue; }
             if (hi == 0xB0 && (st & 0x0F) == G.channel && G.connected)
                 nc_on_host_cc(&G.core, port, pk->data[j + 1] & 0x7F, pk->data[j + 2] & 0x7F);
             j += size;
