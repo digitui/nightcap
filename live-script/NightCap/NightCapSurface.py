@@ -9,7 +9,7 @@ NightCap - Ableton Live remote script with native NightCap (no wrapper plug-in n
   Buttons 1-8     112-119   jump to page 1-8                          mute tracks
   Learn           120       learn (hold 1.5 s: reset this device's mapping)
   View            121       reset last touched parameter to default
-  Page - / +      122/123   previous / next page                      move red box
+  Page - / +      122/111   previous / next page                      move red box
   User / FX       124/125   previous / next device on the track
   Inst            126       lock to this device (stays while you select other tracks)
   Mixer           127       switch NightCap / Mixer mode
@@ -56,7 +56,10 @@ TOUCH_CCS = list(range(96, 104))
 SPEED_DIAL_CC = 74
 CROSSFADER_CC = 72
 TOP_BUTTON_CCS = list(range(112, 120))
-LEARN, VIEW, PAGE_DOWN, PAGE_UP, USER, FX, INST, MIXER = range(120, 128)
+# Page+ would be CC 123 = MIDI 'All Notes Off', a channel-mode message that Live swallows before it
+# reaches a control surface. So Live sees Page+ as CC 111; NightCapBridge translates 123 <-> 111.
+LEARN, VIEW, PAGE_DOWN, USER, FX, INST, MIXER = 120, 121, 122, 124, 125, 126, 127
+PAGE_UP = 111
 
 SYSEX_HEADER = (0xF0, 0x7D, 0x4B, 0x4E, 0x43)
 SYSEX_SET_MODE = 0x01

@@ -159,6 +159,7 @@ static void send_to_port(int port, const Byte *msg, UInt16 n) {
 
 static void midi_out_cb(void *ctx, int port, uint8_t cc, uint8_t value) {
     (void)ctx;
+    if (port == 0 && cc == 123) cc = 111;   /* Page+: Live swallows CC 123 (All Notes Off), so Live sees CC 111 */
     Byte msg[3] = { (Byte)(0xB0 | G.channel), cc, value };
     send_to_port(port, msg, 3);
     if (G.verbose) LOG("midi out [%s]: CC %d = %d", port ? "nightcap" : "main", cc, value);
@@ -198,7 +199,7 @@ static void midi_in_proc(const MIDIPacketList *pl, void *refCon, void *srcRef) {
             UInt16 size = (hi == 0xC0 || hi == 0xD0) ? 2 : 3;
             if (j + size > len) break;
             if (hi == 0xB0 && (st & 0x0F) == G.channel && G.connected)
-                nc_on_host_cc(&G.core, port, pk->data[j + 1] & 0x7F, pk->data[j + 2] & 0x7F);
+                nc_on_host_cc(&G.core, port, (port == 0 && (pk->data[j + 1] & 0x7F) == 111) ? 123 : (pk->data[j + 1] & 0x7F), pk->data[j + 2] & 0x7F);   /* Page+ LED: CC 111 from Live -> hardware CC 123 */
             j += size;
         }
     }
