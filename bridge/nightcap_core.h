@@ -18,8 +18,8 @@
 #define NC_ENC_FIRST        0x40  /* 8 endless encoders, relative, 0x40..0x47 */
 #define NC_CROSSFADER       0x48  /* decoded from 0x48/0x49 pair */
 #define NC_SPEED_DIAL       0x4A  /* relative */
-#define NC_SPEED_TOUCH      0x51
-#define NC_SPEED_PUSH       0x52
+#define NC_SPEED_PUSH       0x51  /* 127 pressed down, 0 released */
+#define NC_SPEED_TOUCH      0x52  /* 127 while a finger is on the dial */
 #define NC_XFADER_TOUCH     0x53
 #define NC_ENC_TOUCH_FIRST  0x60  /* 0x60..0x67 */
 #define NC_BUTTON_FIRST     0x70  /* 16 buttons 0x70..0x7F */
@@ -27,6 +27,7 @@
 /* Output (LED) control numbers */
 #define NC_LED_RING_FIRST   0x40  /* ring position 0..127, 0x40..0x47 */
 #define NC_LED_MODE_FIRST   0x48  /* ring mode, 0x48..0x4F */
+#define NC_LED_SPEED_RING   0x50  /* speed dial ring position 0..127 (its ring mode is 0x51) */
 #define NC_LED_BUTTON_FIRST 0x70  /* button LEDs, 0x70..0x7F (0=off) */
 
 #define NC_MAX_PACKET 8           /* Flush() fires when >7 bytes buffered */
@@ -79,7 +80,10 @@ void nc_send_init(nc_state *s);
 /* Feed raw bytes read from the interrupt IN pipe. now_ns = monotonic clock. */
 void nc_on_usb_data(nc_state *s, const uint8_t *buf, size_t len, uint64_t now_ns);
 /* Feed a CC received from a host port (LED feedback). Only the active port reaches the hardware;
-   the others are remembered and restored when that port becomes active. */
+   the others are remembered and restored when that port becomes active. Only LED registers (ring
+   positions, the speed dial ring, button LEDs) are accepted: other numbers, such as the ring modes
+   0x48..0x4F and 0x51, share their number with an input, so a host echoing a control back would
+   otherwise change how a ring is drawn. */
 void nc_on_host_cc(nc_state *s, int port, uint8_t cc, uint8_t value);
 /* Feed a complete SysEx message received from a host port. Returns 1 if it was a bridge command. */
 int nc_on_host_sysex(nc_state *s, int port, const uint8_t *msg, size_t len);

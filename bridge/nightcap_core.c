@@ -139,11 +139,19 @@ void nc_on_usb_data(nc_state *s, const uint8_t *p, size_t n, uint64_t now) {
 }
 
 static int is_led(uint8_t cc) {
-    return (cc >= NC_LED_RING_FIRST && cc < NC_LED_MODE_FIRST + 8) || cc >= NC_LED_BUTTON_FIRST;
+    return (cc >= NC_LED_RING_FIRST && cc < NC_LED_MODE_FIRST + 8) || cc == NC_LED_SPEED_RING
+        || cc >= NC_LED_BUTTON_FIRST;
+}
+
+/* LED registers a host may write: positions and on/off, never ring modes */
+static int is_host_led(uint8_t cc) {
+    return (cc >= NC_LED_RING_FIRST && cc < NC_LED_RING_FIRST + 8) || cc == NC_LED_SPEED_RING
+        || (cc >= NC_LED_BUTTON_FIRST && cc <= 0x7F);
 }
 
 void nc_on_host_cc(nc_state *s, int port, uint8_t cc, uint8_t value) {
     if (port < 0 || port >= NC_NUM_PORTS) return;
+    if (!is_host_led(cc)) return;
     s->shadow[port][cc] = value;
     if (port != s->mode) return;
     if (cc >= NC_LED_RING_FIRST && cc < NC_LED_RING_FIRST + 8)

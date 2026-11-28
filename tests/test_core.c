@@ -30,4 +30,18 @@ int main(void){
   puts("mode switch repaints LEDs OK");
   reset(); uint8_t e[]={0x43,0x02}; nc_on_usb_data(&s,e,2,9000000000ULL); assert(nm==1&&midi_p[0]==1&&midi_v[0]==2); puts("controls routed to nightcap port OK");
   reset(); sx[6]=0; nc_on_host_sysex(&s,1,sx,8); { int ok70=0; for(size_t i=0;i<ul;i+=2) if(usb[i]==0x70&&usb[i+1]==127) ok70=1; assert(ok70 && last_mode==0);} puts("switch back restores main LEDs OK");
+  /* host feedback: only LED registers reach the hardware, never ring modes */
+  { const uint8_t ringModeRegisters[] = { 0x48, 0x49, 0x4A, 0x4F, 0x51 };
+    for (size_t i = 0; i < sizeof ringModeRegisters; i++) {
+      reset(); nc_on_host_cc(&s, 0, ringModeRegisters[i], 50); assert(ul == 0);
+      reset(); nc_set_mode(&s, 1); nc_set_mode(&s, 0);
+      for (size_t k = 0; k < ul; k += 2) assert(usb[k] != ringModeRegisters[i]);
+    } }
+  puts("ring mode feedback dropped OK");
+  { const uint8_t inputOnlyNumbers[] = { 0x53, 0x60, 0x67 };
+    for (size_t i = 0; i < sizeof inputOnlyNumbers; i++) { reset(); nc_on_host_cc(&s, 0, inputOnlyNumbers[i], 127); assert(ul == 0); } }
+  puts("touch feedback dropped OK");
+  reset(); nc_on_host_cc(&s, 0, 0x47, 90); assert(ul == 2 && usb[0] == 0x47 && usb[1] == 90); puts("ring position reaches hw OK");
+  reset(); nc_on_host_cc(&s, 0, NC_LED_SPEED_RING, 70); assert(ul == 2 && usb[0] == 0x50 && usb[1] == 70); puts("speed dial ring reaches hw OK");
+  reset(); nc_on_host_cc(&s, 0, 0x7F, 127); assert(ul == 2 && usb[0] == 0x7F); puts("last button LED reaches hw OK");
   puts("ALL TESTS PASSED"); return 0; }
