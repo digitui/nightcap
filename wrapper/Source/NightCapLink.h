@@ -12,7 +12,8 @@ namespace NightCapCC
     constexpr int encoderFirst   = 64;   // 64..71 relative
     constexpr int crossfader     = 72;   // absolute 0..127
     constexpr int speedDial      = 74;   // relative
-    constexpr int speedTouch     = 81;
+    constexpr int speedPush      = 81;
+    constexpr int speedTouch     = 82;
     constexpr int xfaderTouch    = 83;
     constexpr int touchFirst     = 96;   // 96..103
     constexpr int buttonFirst    = 112;  // 112..119 top row
